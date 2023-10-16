@@ -497,9 +497,9 @@ public class BankOverlay implements Listener {
 
     private String getSearchString(ItemStack is, boolean isLore) {
         if (isLore) {
-            return TextFormatting.getTextWithoutFormattingCodes(ItemUtils.getStringLore(is).toLowerCase());
+          return TextFormatting.getTextWithoutFormattingCodes(ItemUtils.getStringLore(is).toLowerCase());
         } else {
-            return TextFormatting.getTextWithoutFormattingCodes(is.getDisplayName().toLowerCase());
+          return TextFormatting.getTextWithoutFormattingCodes(is.getDisplayName().toLowerCase());
         }
     }
 

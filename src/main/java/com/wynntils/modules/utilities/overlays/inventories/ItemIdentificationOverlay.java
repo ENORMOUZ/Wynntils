@@ -87,6 +87,7 @@ public class ItemIdentificationOverlay implements Listener {
         if (nbt.hasKey("wynntilsIgnore")) return;
 
         String itemName = StringUtils.normalizeBadString(getTextWithoutFormattingCodes(stack.getDisplayName()));
+        boolean isShiny = false;
 
         // Check if unidentified item.
         if (itemName.contains("Unidentified") && UtilitiesConfig.Identifications.INSTANCE.showItemGuesses) {
@@ -97,29 +98,36 @@ public class ItemIdentificationOverlay implements Listener {
         }
 
         // Check if item is a valid item if not ignore it
-        if (!nbt.hasKey("wynntils") && WebManager.getItems().get(itemName) == null) {
-            nbt.setBoolean("wynntilsIgnore", true);
-            return;
+        if (!nbt.hasKey("wynntils")) {
+            if (itemName.contains("⬡ Shiny ")) {
+                isShiny = true;
+            }
+            if (WebManager.getItems().get(itemName.replace("⬡ Shiny ", "")) == null) {
+                nbt.setBoolean("wynntilsIgnore", true);
+                return;
+            }
         }
 
         NBTTagCompound wynntils = generateData(stack, forcedIdType);
-        ItemProfile item = WebManager.getItems().get(wynntils.getString("originName"));
+        ItemProfile item = WebManager.getItems().get(wynntils.getString("originName").replace("⬡ Shiny ", ""));
 
         // Block if the item is not the real item
         if (!wynntils.hasKey("isPerfect") && !wynntils.hasKey("isDefective") && !stack.getDisplayName().startsWith(item.getTier().getTextColor())) {
-            nbt.setBoolean("wynntilsIgnore", true);
-            nbt.removeTag("wynntils");
-            return;
+            if (!stack.getDisplayName().contains("§f⬡ §5Shiny ")) {
+                nbt.setBoolean("wynntilsIgnore", true);
+                nbt.removeTag("wynntils");
+                return;
+            }
         }
 
         // Perfect name
         if (wynntils.hasKey("isPerfect")) {
-            stack.setStackDisplayName(AnimatedText.makeRainbow("Perfect " + wynntils.getString("originName"), true));
+            stack.setStackDisplayName(AnimatedText.makeRainbow("Perfect " + (isShiny ? "§f⬡ §5Shiny " : "") + wynntils.getString("originName"), true));
         }
 
         // Defective name
         if (wynntils.hasKey("isDefective")) {
-            stack.setStackDisplayName(AnimatedText.makeDefective(wynntils.getString("originName"), true));
+            stack.setStackDisplayName(AnimatedText.makeDefective((isShiny ? "§f⬡ §5Shiny " : "") + wynntils.getString("originName"), true));
         }
 
         // Update only if should update, this is decided on generateDate
@@ -139,6 +147,7 @@ public class ItemIdentificationOverlay implements Listener {
 
         if (wynntils.hasKey("ids")) {
             NBTTagCompound ids = wynntils.getCompoundTag("ids");
+            NBTTagCompound idsPercentage = new NBTTagCompound();
             for (String idName : ids.getKeySet()) {
                 if (idName.contains("*")) continue; // star data, ignore
 
@@ -191,6 +200,7 @@ public class ItemIdentificationOverlay implements Listener {
                 }
 
                 IdentificationResult result = idType.identify(id, currentValue, isInverted);
+                idsPercentage.setInteger(idName, (int) (result.getAmount()*100));
                 idLore.put(idName, lore + " " + result.getLore());
 
                 if (result.getAmount() > 1d || result.getAmount() < 0d) {
@@ -200,7 +210,11 @@ public class ItemIdentificationOverlay implements Listener {
 
                 relativeTotal += result.getAmount();
                 idAmount++;
+
             }
+
+            idsPercentage.setInteger("itemOverallPercentage", (int) (relativeTotal/(double)idAmount*100));
+            wynntils.setTag("idsPercentage", idsPercentage);
         }
 
         // Copying some parts of the old lore (stops on ids, powder or quality)
@@ -347,7 +361,7 @@ public class ItemIdentificationOverlay implements Listener {
             wynntils.setBoolean("isDefective", true);
         }
 
-        stack.setStackDisplayName(item.getTier().getTextColor() + item.getDisplayName() + specialDisplay);
+        stack.setStackDisplayName(item.getTier().getTextColor() + (isShiny ? "§f⬡ §5Shiny " : "") + item.getDisplayName() + specialDisplay);
 
         // Applying lore
         NBTTagCompound compound = nbt.getCompoundTag("display");
@@ -359,6 +373,7 @@ public class ItemIdentificationOverlay implements Listener {
 
         nbt.setTag("wynntils", wynntils);
         nbt.setTag("display", compound);
+        stack.setTagCompound(nbt);
     }
 
     private static void addItemGuesses(ItemStack stack) {

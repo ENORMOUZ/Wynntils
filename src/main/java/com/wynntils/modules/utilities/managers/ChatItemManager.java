@@ -90,7 +90,7 @@ public class ChatItemManager {
 
         // get identification data
         NBTTagCompound itemData = ItemIdentificationOverlay.generateData(stack, IdentificationType.PERCENTAGES);
-        ItemProfile item = WebManager.getItems().get(itemData.getString("originName"));
+        ItemProfile item = WebManager.getItems().get(itemData.getString("originName").replace("⬡ Shiny ", ""));
 
         // sort list to ensure encoding/decoding is always 1:1
         List<String> sortedIds = new ArrayList<>(item.getStatuses().keySet());

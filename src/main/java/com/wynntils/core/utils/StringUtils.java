@@ -60,6 +60,7 @@ public class StringUtils {
     }
 
     public static String capitalizeFirst(String input) {
+        if (input.isEmpty()) return "";
         return Character.toUpperCase(input.charAt(0)) + input.substring(1);
     }
 
@@ -425,13 +426,13 @@ public class StringUtils {
             while (ebMatcher.find()) {
                 emeralds += (long) (Double.parseDouble(ebMatcher.group(1)) * 64);
             }
-            
+
             // k
             Matcher kMatcher = K_PATTERN.matcher(input);
             while (kMatcher.find()) {
                 emeralds += (long) (Double.parseDouble(kMatcher.group(1)) * 1000);
             }
-            
+
             // m
             Matcher mMatcher = M_PATTERN.matcher(input);
             while (mMatcher.find()) {

@@ -49,7 +49,8 @@ import java.util.regex.Pattern;
 public class BankOverlay implements Listener {
 
     private static final Pattern PAGE_PATTERN = Pattern.compile("\\[Pg\\. ([0-9]*)\\] [a-z_A-Z0-9 ]+'s? (Character|Account) Bank");
-    private static final Pattern PAGE_CUSTOM_NAME_PATTERN = Pattern.compile("\\[Pg\\. ([0-9]*)\\] ([a-z_A-Z0-9 ]+)");
+    private static final Pattern MISC_BUCKET_PATTERN = Pattern.compile("\\[Pg\\. ([0-9]*)\\] [a-z_A-Z0-9 ]+'s? Misc. Bucket");
+    private static final Pattern PAGE_CUSTOM_NAME_PATTERN = Pattern.compile("\\[Pg\\. ([0-9]*)\\] ([a-z_A-Z0-9.' ]+)");
 
     private static final ResourceLocation COLUMN_ARROW = new ResourceLocation("minecraft:textures/wynn/gui/column_arrow_right.png");
 
@@ -99,15 +100,20 @@ public class BankOverlay implements Listener {
         // This is done so already renamed pages can be identified as well. Used when GuiParentedYesNo override current gui
         // and we need to try to reload the overlay
         if (!matcher.matches()) {
-            Matcher matcherCustomName = PAGE_CUSTOM_NAME_PATTERN.matcher(TextFormatting.getTextWithoutFormattingCodes(name));
+            Matcher matcherMiscBucket = MISC_BUCKET_PATTERN.matcher(TextFormatting.getTextWithoutFormattingCodes(name));
+            if (matcherMiscBucket.matches()) {
+                page = Integer.parseInt(matcherMiscBucket.group(1));
+            } else {
+                Matcher matcherCustomName = PAGE_CUSTOM_NAME_PATTERN.matcher(TextFormatting.getTextWithoutFormattingCodes(name));
 
-            if (!matcherCustomName.matches())
-                return;
+                if (!matcherCustomName.matches())
+                    return;
 
-            page = Integer.parseInt(matcherCustomName.group(1));
+                page = Integer.parseInt(matcherCustomName.group(1));
 
-            if (!UtilitiesConfig.Bank.INSTANCE.pageNames.containsKey(page) || !matcherCustomName.group(2).equals(UtilitiesConfig.Bank.INSTANCE.pageNames.get(page)))
-                return;
+                if (!UtilitiesConfig.Bank.INSTANCE.pageNames.containsKey(page) || !matcherCustomName.group(2).equals(UtilitiesConfig.Bank.INSTANCE.pageNames.get(page)))
+                    return;
+            }
         } else {
             page = Integer.parseInt(matcher.group(1));
         }
@@ -491,9 +497,9 @@ public class BankOverlay implements Listener {
 
     private String getSearchString(ItemStack is, boolean isLore) {
         if (isLore) {
-          return TextFormatting.getTextWithoutFormattingCodes(ItemUtils.getStringLore(is).toLowerCase());
+            return TextFormatting.getTextWithoutFormattingCodes(ItemUtils.getStringLore(is).toLowerCase());
         } else {
-          return TextFormatting.getTextWithoutFormattingCodes(is.getDisplayName().toLowerCase());
+            return TextFormatting.getTextWithoutFormattingCodes(is.getDisplayName().toLowerCase());
         }
     }
 

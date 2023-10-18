@@ -11,10 +11,15 @@ import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TerritoryProfile {
 
-    public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    public static SimpleDateFormat dateFormatMicro = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+    private static final Pattern dateFormatPattern = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})$");
+    private static final Pattern dateFormatMicroPattern = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6})$");
 
     String name;
     String friendlyName;
@@ -158,7 +163,14 @@ public class TerritoryProfile {
 
             Date acquired = null;
             try {
-                acquired = dateFormat.parse(territory.get("acquired").getAsString());
+                String dateAcquiredString = territory.get("acquired").getAsString();
+                Matcher dateFormatMatcher = dateFormatPattern.matcher(dateAcquiredString);
+                Matcher dateFormatMicroMatcher = dateFormatMicroPattern.matcher(dateAcquiredString);
+                if (dateFormatMatcher.matches()) {
+                    acquired = dateFormat.parse(dateAcquiredString);
+                } else if (dateFormatMicroMatcher.matches()) {
+                    acquired = dateFormatMicro.parse(dateAcquiredString);
+                }
             } catch (ParseException e) {
                 e.printStackTrace();
             }
